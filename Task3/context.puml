@@ -1,0 +1,43 @@
+@startuml name = 'Диаграмма контекстов'
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Person(newClient, "Новый клиент", "Подаёт заявку через сайт")
+Person(existingClient, "Клиент банка", "Подаёт заявку через интернет-банк")
+
+System_Ext(telecomOperator, "Телеком оператор")
+System_Ext(smsGateway, "СМС шлюз")
+
+Enterprise_Boundary(c0, "Банк 'Стандарт'") {
+    System(site, "Сайт банка", "React.js, PHP")
+    System(internetBank, "Интернет-банк", "ASP.NET MVC 4.5, MS SQL")
+    System(abs, "АБС", "Delphi, Oracle")
+    System(crm, "Система call-центра", "React.js, Java Spring Boot, PostgreSQL")
+    System(rateService, "Сервис расчета ставок по депозитам", "Spring Boot, PostgreSQL")
+
+    Person(callCenterOperator, "Оператор колл-центра")
+    Person(backOfficeManager, "Сотрудник бэк-офиса")
+}
+
+Rel_U(newClient, site, "Просматривает ставки, подаёт заявку")
+Rel_U(existingClient, internetBank, "Просматривает персональные ставки, подаёт заявку")
+
+Rel(site, rateService, "Запрашивает доступные ставки")
+Rel(internetBank, rateService, "Запрашивает персональные ставки")
+
+Rel(site, crm, "Отправляет заявки")
+Rel_Back(site, abs, "Получает справочники ставок")
+
+Rel(internetBank, abs, "Создаёт заявки")
+
+Rel(abs, rateService, "Синхронизирует ставки", "Периодически / при изменении")
+Rel(crm, abs, "Создаёт заявки")
+Rel(backOfficeManager, abs, "Обрабатывает заявки вручную")
+Rel(callCenterOperator, crm, "Обрабатывает заявки с сайта")
+Rel(backOfficeManager, rateService, "Обновляет ставки")
+
+Rel(abs, smsGateway, "Отправляет СМС")
+Rel(smsGateway, telecomOperator, "Посылает СМС клиенту")
+Rel_Back(existingClient, telecomOperator, "Получает СМС")
+Rel_Back(newClient, telecomOperator, "Получает СМС")
+
+@enduml
